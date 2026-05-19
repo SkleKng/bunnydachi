@@ -6,20 +6,15 @@ Bunnydachi
   Double right-click: quit
 """
 
-import asyncio, ctypes, json, math, os, queue, threading, time
+import asyncio, json, math, os, queue, threading, time
 import tkinter as tk
 from collections import deque
 from PIL import Image, ImageTk
 import websockets
 
-# ── win32 topmost helpers ─────────────────────────────────────────────────────
-_user32      = ctypes.windll.user32
-HWND_TOPMOST = -1
-_SWP_FLAGS   = 0x0002 | 0x0001 | 0x0010   # NOMOVE | NOSIZE | NOACTIVATE
-
 # ── config ────────────────────────────────────────────────────────────────────
 SPRITES_DIR = os.path.join(os.path.dirname(__file__), "sprites")
-SERVER      = "ws://localhost:8765"
+SERVER      = "wss://boolean-railway-consumers-rich.trycloudflare.com"
 CHROMA      = "#010203"
 COLS, ROWS  = 5, 5
 HEIGHT      = 110
@@ -203,9 +198,6 @@ class PeerBunny:
     def destroy(self):
         self.win.destroy()
 
-    def hwnd(self):
-        return self.win.winfo_id()
-
     def _tick(self):
         if not self.win.winfo_exists():
             return
@@ -302,16 +294,7 @@ class Bunnydachi:
         self.canvas.bind("<Double-Button-3>", lambda _: self.root.quit())
 
         self._tick()
-        self._keep_topmost()
         self.root.mainloop()
-
-    # ── topmost ────────────────────────────────────────────────────────────
-
-    def _keep_topmost(self):
-        hwnds = [self.root.winfo_id()] + [p.hwnd() for p in self.peers.values()]
-        for hwnd in hwnds:
-            _user32.SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, _SWP_FLAGS)
-        self.root.after(500, self._keep_topmost)
 
     # ── input ──────────────────────────────────────────────────────────────
 
